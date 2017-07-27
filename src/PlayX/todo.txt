@@ -1,0 +1,8 @@
+context menu for playx
+ - attach to player
+ - sub / unsub
+   - unsub all
+ - volume
+ - ????
+ - give goggles
+ - etc?
