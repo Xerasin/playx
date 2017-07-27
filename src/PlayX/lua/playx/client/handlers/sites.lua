@@ -90,54 +90,22 @@ try {
     callback(playxlib.HandlerResult{
         center = true,
         body = [[
-<object type="application/x-shockwave-flash"
-        height="]]..height..[["
+<object type="application/x-shockwave-flash" 
+        height="]]..height..[[" 
         width="]]..width..[["
-        id="live_embed_player_flash"
-        data="http://www.justin.tv/widgets/live_embed_player.swf?channel=]]..uri..[["
-        bgcolor="#000000">
-  <param  name="allowFullScreen"
+        id="live_embed_player_flash" 
+        data="http://www.justin.tv/widgets/live_embed_player.swf?channel=]]..uri..[[" 
+        bgcolor="#000000"> 
+  <param  name="allowFullScreen" 
           value="true" />
-  <param  name="allowScriptAccess"
+  <param  name="allowScriptAccess" 
           value="always" />
-  <param  name="allowNetworking"
+  <param  name="allowNetworking" 
           value="all" />
-  <param  name="movie"
+  <param  name="movie" 
           value="http://www.justin.tv/widgets/live_embed_player.swf" />
-  <param  name="flashvars"
+  <param  name="flashvars" 
           value="hostname=www.justin.tv&channel=]]..uri..[[&auto_play=true&start_volume=]] .. (volume / 2) .. [[" />
-</object>]],
-        volumeFunc = volumeFunc})
-end)
-list.Set("PlayXHandlers", "twitch.tv", function(width, height, start, volume, adjVol, uri, handlerArgs, callback)
-    volume = adjVol -- This handler supports instant volume changing
-
-    local volumeFunc = function(volume)
-        return [[
-try {
-  live_embed_player_flash.volume =]] .. (volume / 2).. [[;
-} catch (e) { console.log(e.message) }
-]]
-    end -- Danking fix
-    callback(playxlib.HandlerResult{
-        center = true,
-        body = [[
-<object type="application/x-shockwave-flash"
-        height="]]..height..[["
-        width="]]..width..[["
-        id="live_embed_player_flash"
-        data="http://www.twitch.tv/widgets/live_embed_player.swf?channel=]]..uri..[["
-        bgcolor="#000000">
-  <param  name="allowFullScreen"
-          value="true" />
-  <param  name="allowScriptAccess"
-          value="always" />
-  <param  name="allowNetworking"
-          value="all" />
-  <param  name="movie"
-          value="http://www.twitch.tv/widgets/live_embed_player.swf" />
-  <param  name="flashvars"
-          value="hostname=www.twitch.tv&channel=]]..uri..[[&auto_play=true&start_volume=]] .. (volume / 2) .. [[" />
 </object>]],
         volumeFunc = volumeFunc})
 end)
@@ -228,8 +196,8 @@ end)
 list.Set("PlayXHandlers", "WebM", function(width, height, start, volume, adjVol, uri, handlerArgs, callback)
     local result = playxlib.HandlerResult{
         body = [[
-        <video id="video" width="]] .. width ..
-        [[" height="]] .. height ..
+        <video id="video" width="]] .. width .. 
+        [[" height="]] .. height .. 
         [[" onPlay="currentTime=]] .. start ..
         [[,volume=]] .. string.format("%.2f",volume/100) ..
         [[" autoplay loop>
@@ -264,8 +232,8 @@ list.Set("PlayXHandlers", "dailymotion", function(width, height, start, volume, 
 				}());
 
 				// This function init the player once the SDK is loaded
-				var interval = setInterval(function()
-				{
+				var interval = setInterval(function() 
+				{ 
 					if(player.skipAd)
 					{
 						player.skipAd();
@@ -307,13 +275,13 @@ list.Set("PlayXHandlers", "dailymotion", function(width, height, start, volume, 
 end)
 local function httpGet3(url, func)
 	local t = vgui.Create("DHTML")
-	t:AddFunction("gmod","return", function(a, b, c)
+	t:AddFunction("gmod","return", function(a, b, c) 
 		t:Remove()
 		timer.Simple(0, function()
 			func((a or "") .. " " .. (b or "") .. " " .. (c or ""))
 		end)
 	end)
-	t:AddFunction("gmod","loaded", function(a, b, c)
+	t:AddFunction("gmod","loaded", function(a, b, c) 
 		LocalPlayer():ChatPrint("Loading... You may hear the player in the background!")
 		timer.Simple(12, function()
 			t:RunJavascript([[
@@ -336,7 +304,7 @@ local function fromUTF8(s)
 	if not lookup then
 		lookup = {}
 		for I=1,#alphabet do
-			lookup[string.byte(alphabet[I])] = I - 1
+			lookup[string.byte(alphabet[I])] = I - 1	
 		end
 	end
 	local buffer = {}
@@ -376,7 +344,7 @@ local function wrap(str)
 			
 			I = I + 2
 		elseif true then
-			I = I + 3
+			I = I + 3	
 		end
 		
 	end

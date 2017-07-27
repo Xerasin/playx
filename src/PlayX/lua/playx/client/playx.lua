@@ -1,17 +1,31 @@
-pcall(include, "autorun/translation.lua") local L = translation and translation.L or function(s) return s end
+-- PlayX
+-- Copyright (c) 2009, 2010 sk89q <http://www.sk89q.com>
+-- 
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 2 of the License, or
+-- (at your option) any later version.
+-- 
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+-- 
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-- 
+-- $Id$
 include("playxlib.lua")
 
-local cvar_playx_enabled = CreateClientConVar("playx_enabled", 1, true, false)
---local cvar_playx_mute_nofocus = CreateClientConVar("playx_mute_nofocus", 1, true, false)
-local snd_mute_losefocus = GetConVar"snd_mute_losefocus"
-local cvar_playx_volume = CreateClientConVar("playx_volume", 80, true, false)
-local cvar_playx_provider = CreateClientConVar("playx_provider", "", false, false)
-local cvar_playx_uri = CreateClientConVar("playx_uri", "", false, false)
-local cvar_playx_start_time = CreateClientConVar("playx_start_time", "0:00", false, false)
-local cvar_playx_force_low_framerate = CreateClientConVar("playx_force_low_framerate", 0, false, false)
-local cvar_playx_use_jw = CreateClientConVar("playx_use_jw", 1, false, false)
-local cvar_playx_error_windows = CreateClientConVar("playx_error_windows", 1, true, false)
-local cvar_playx_debug = CreateClientConVar("playx_debug", 0, true, false)
+CreateClientConVar("playx_enabled", 1, true, false)
+CreateClientConVar("playx_volume", 80, true, false)
+CreateClientConVar("playx_provider", "", false, false)
+CreateClientConVar("playx_uri", "", false, false)
+CreateClientConVar("playx_start_time", "0:00", false, false)
+CreateClientConVar("playx_force_low_framerate", 0, false, false)
+CreateClientConVar("playx_use_jw", 1, false, false)
+CreateClientConVar("playx_error_windows", 1, true, false)
+CreateClientConVar("playx_debug", 0, true, false)
 
 PlayX = {}
 
@@ -19,13 +33,13 @@ include("playx/client/bookmarks.lua")
 include("playx/client/panel.lua")
 include("playx/client/ui.lua")
 include("playx/client/concmds.lua")
-PlayX.Enabled = GetConVar("playx_enabled"):GetBool()
+PlayX.Enabled = true
 PlayX.JWPlayerURL = "http://playx.xeras.in/player.swf"
-PlayX.HostURL = "http://playx.xeras.in/host.html" -- "http://sk89q.github.com/playx/host/host.html"
+PlayX.HostURL = "http://playx.xeras.in/host.html"
 PlayX.ShowRadioHUD = true
 PlayX.Providers = {}
 PlayX.CrashDetectionWindows = {}
-PlayX.CrashDetected = file.Read("_playx_crash_detection.txt") == "BEGIN"
+PlayX.CrashDetected = false
 
 surface.CreateFont("PlayXHUDNumber",
 	{
@@ -95,11 +109,11 @@ function PlayX.GetCounts()
     local numPlaying = 0
 
     for _, instance in pairs(PlayX.GetInstances()) do
-        if IsValid(instance) and instance.HasMedia and instance:HasMedia() then
+        if instance:HasMedia() then
             numHasMedia = numHasMedia + 1
 
             if instance:IsResumable() then
-                numResumable = numResumable + 1
+                numResumable = numResumable + 1            
             end
         end
 
@@ -123,58 +137,15 @@ function PlayX.Enable()
 end
 
 --- Disables the player.
-function PlayX.Disable()
+function PlayX.Disable()    
     RunConsoleCommand("playx_enabled", "0")
 end
 
 --- Gets the overall volume. This is the overall volume of all players.
 -- The value will be between 0 and 100.
 -- @return
-
-
-function PlayX.IsEngineMuted()
-	if not snd_mute_losefocus:GetBool() then return end
-	if PlayX.__engine_muted then return true end
-end
-
-
-
-function PlayX.EngineFocusChanged(focus)
-
-	-- gained focus back
-	if focus and PlayX.__engine_muted then
-		PlayX.__engine_muted = false
-		PlayX.VolumeChangeCallback()
-		return
-	end
-	
-	-- lost focus and should mute
-	if not focus and snd_mute_losefocus:GetBool() then
-		PlayX.__engine_muted = true
-		PlayX.VolumeChangeCallback()
-	end
-end
-
--- focus callback
-	local engine_focused = true
-	timer.Simple(1,function()
-			
-		hook.Add("Think","playx_focuspoll",function()
-			local focus=system.HasFocus()
-			if engine_focused~=focus then
-				engine_focused = focus
-				PlayX.EngineFocusChanged(focus)
-			end
-		end )
-			
-	end)
-
-
-
 function PlayX.GetVolume()
-	local vol = PlayX.IsEngineMuted() and 0 or cvar_playx_volume:GetInt() or 100
-	vol = vol>100 and 100 or vol<0 and 0 or vol
-    return vol
+    return math.Clamp(GetConVar("playx_volume"):GetInt(), 0, 100)
 end
 
 --- Sets the overall volume. This is the overall volume of all players.
@@ -196,7 +167,7 @@ function PlayX.ResumePlay()
     for _, instance in pairs(PlayX.GetInstances()) do
         if instance.Media and instance.Media.ResumeSupported then
             if instance.IsPlaying then
-                instance:Stop()
+                instance:Stopped()
             end
             instance:Play()
         end
@@ -302,28 +273,28 @@ end
 -- @return Boolean
 -- @hidden
 function PlayX.DetectCrash()
-    if PlayX.CrashDetected and PlayX.Enabled then
+    --[[if PlayX.CrashDetected and PlayX.Enabled then
         RunConsoleCommand("playx_enabled", "0")
         PlayX.Enabled = false
 		chat.AddText(
 		    Color(255, 255, 0, 255),
-		    L("PlayX has disabled itself following a detection of a crash in a previous " ..
-		    "session. Re-enable PlayX via your tool menu under the \"Options\" tab.")
+		    "PlayX has disabled itself following a detection of a crash in a previous " ..
+		    "session. Re-enable PlayX via your tool menu under the \"Options\" tab."
 		)
         return true
-    end
+    end]]
 
     return false
 end
 
 cvars.AddChangeCallback("playx_enabled", function(cvar, old, new)
-    PlayX.Enabled = GetConVar("playx_enabled"):GetBool()
+    PlayX.Enabled = true
 
     if PlayX.Enabled then
-        if PlayX.CrashDetected then
+       --[[if PlayX.CrashDetected then
 	        file.Write("_playx_crash_detection.txt", "CLEAR")
 	        PlayX.CrashDetected = false
-	    end
+	    end]]
 	    
         PlayX.ResumePlay()
         hook.Call("PlayXEnabled", GAMEMODE)
@@ -335,20 +306,23 @@ cvars.AddChangeCallback("playx_enabled", function(cvar, old, new)
     -- Panels will be updated already
 end)
 
-function PlayX.VolumeChangeCallback()
-    for _, instance in pairs(PlayX.GetInstances()) do
-        if IsValid(instance) and instance.SetVolume then
-            instance:SetVolume()
-        end
-    end
-
-    hook.Call("PlayXVolumeSet", GAMEMODE, vol)
-end
-
 cvars.AddChangeCallback("playx_volume", function(cvar, old, new)
     local volume = PlayX.GetVolume()
 
-	PlayX.VolumeChangeCallback()
+    for _, instance in pairs(PlayX.GetInstances()) do
+        instance:SetVolume()
+    end
+
+    hook.Call("PlayXVolumeSet", GAMEMODE, vol)
+end)
+
+net.Receive("PlayXPlayPause", function()
+    local ent = net.ReadEntity()
+    ent:PlayPause(net.ReadBool())
+end)
+net.Receive("PlayXSeek", function()
+    local ent = net.ReadEntity()
+    ent:Seek(net.ReadFloat())
 end)
 
 net.Receive("PlayXBegin",function(len)
@@ -360,6 +334,7 @@ net.Receive("PlayXBegin",function(len)
 	local resumeSupported = decoded.ResumeSupported
 	local lowFramerate = decoded.LowFramerate
 	local handlerArgs = decoded.HandlerArgs
+    local paused = decoded.Paused
 
 	PlayX.Debug("PlayXBegin received for %s (handler %s)", tostring(instance), handler)
 
@@ -368,8 +343,12 @@ net.Receive("PlayXBegin",function(len)
 	elseif not table.HasValue(list.Get("PlayXScreenClasses"), instance:GetClass()) then
 		Error("PlayX: PlayXBegin referenced non-PlayX entity (did you call BeginMedia() too early?)")
 	end
-
-	instance:BeginMedia(handler, uri, playAge, resumeSupported, lowFramerate, handlerArgs)
+	--[=[if not _R.Entity.BeginMedia and not LocalPlayer().RenderWarningIssued then 
+		PlayX.RenderBoundsUI()
+		LocalPlayer().RenderWarningIssued = true
+		return
+	end]=]
+	instance:BeginMedia(handler, uri, playAge, resumeSupported, lowFramerate, handlerArgs, paused)
 end)
 
 net.Receive("PlayXProvidersList",function(len)
@@ -388,27 +367,8 @@ net.Receive("PlayXProvidersList",function(len)
 end)
 
 
-usermessage.Hook("PlayXBegin", function(um)
-    local instance = um:ReadEntity()
-    local handler = um:ReadString()
-    local uri = um:ReadString()
-    local playAge = um:ReadLong()
-    local resumeSupported = um:ReadBool()
-    local lowFramerate = um:ReadBool()
-
-    PlayX.Debug("PlayXBegin received for %s (handler %s)", tostring(instance), handler)
-
-    if not IsValid(instance) then
-        Error("PlayX: PlayXBegin referenced non-existent entity (did you call BeginMedia() too early?)")
-    elseif not table.HasValue(list.Get("PlayXScreenClasses"), instance:GetClass()) then
-        Error("PlayX: PlayXBegin referenced non-PlayX entity (did you call BeginMedia() too early?)")
-    end
-
-    instance:BeginMedia(handler, uri, playAge, resumeSupported, lowFramerate, {})
-end)
-
-usermessage.Hook("PlayXEnd", function(um)
-    local instance = um:ReadEntity()
+net.Receive("PlayXEnd", function()
+    local instance = net.ReadEntity()
 
     PlayX.Debug("PlayXEnd received for %s", tostring(instance))
 
@@ -427,19 +387,19 @@ end)
 
 
 
-usermessage.Hook("PlayXError", function(um)
-    local err = um:ReadString()
+net.Receive("PlayXError", function()
+    local err = net.ReadString()
     PlayX.ShowError(err)
 end)
 
-usermessage.Hook("PlayXMetadataStd", function(um)
-    local instance = um:ReadEntity()
-    local title = um:ReadString()
+net.Receive("PlayXMetadataStd", function()
+    local instance = net.ReadEntity()
+    local title = net.ReadString()
 
     PlayX.Debug("Got PlayXMetadataStd umsg for %s", tostring(instance))
 
     -- We can just ignore the usermessage in this situation
-    if not IsValid(instance) or not
+    if not IsValid(instance) or not 
         table.HasValue(list.Get("PlayXScreenClasses"), instance:GetClass()) then
         return
     end

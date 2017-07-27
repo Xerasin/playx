@@ -1,3 +1,21 @@
+-- PlayX
+-- Copyright (c) 2009, 2010 sk89q <http://www.sk89q.com>
+-- 
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 2 of the License, or
+-- (at your option) any later version.
+-- 
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+-- 
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-- 
+-- $Id$
+
 PlayX.BookmarksWindow = nil
 PlayX.Bookmarks = {}
 
@@ -60,7 +78,7 @@ end
 -- @return Error message if error
 function Bookmark:Update(title, provider, uri, keyword, startAt, lowFramerate)
     if self.Deleted then
-        Error("Operation performed on deleted bookmark")
+        Error("Operation performed on deleted bookmark")    
     end
 
     local title = title:Trim()
@@ -168,7 +186,7 @@ end
 --- Play the bookmark.
 function Bookmark:Play()
     if self.Deleted then
-        Error("Operation performed on deleted bookmark")
+        Error("Operation performed on deleted bookmark")    
     end
 
     PlayX.RequestOpenMedia(self.Provider, self.URI, self.StartAt,
@@ -180,7 +198,7 @@ end
 -- to the panel.
 function Bookmark:CopyToPanel()
     if self.Deleted then
-        Error("Operation performed on deleted bookmark")
+        Error("Operation performed on deleted bookmark")    
     end
 
     RunConsoleCommand("playx_provider", self.Provider)
@@ -191,7 +209,7 @@ end
 
 --- Load bookmarks from file.
 function PlayX.LoadBookmarks()
-    local data = file.Read("playx/bookmarks.txt")
+    local data = file.Read("playx/bookmarks.txt","DATA")
 
     if data == nil then
         -- Default data
@@ -403,7 +421,7 @@ function PlayX.OpenBookmarksWindow(selectTitle)
         surface.SetFont("Default")
         surface.SetDrawColor(col)
         surface.SetTextColor(col)
-		surface.SetTextPos(0, 0)
+		surface.SetTextPos(0, 0) 
         local w, h = surface.GetTextSize(text)
 		surface.DrawText(text)
 		surface.DrawLine(0, h, w, h)
@@ -610,7 +628,7 @@ function PlayX.OpenBookmarksWindow(selectTitle)
             PlayX.GetBookmark(line:GetValue(1):Trim()):CopyToPanel()
             frame:Close()
         end)
-        menu:Open()
+        menu:Open() 
     end
 
     bookmarks.DoDoubleClick = function(lst, index, line)

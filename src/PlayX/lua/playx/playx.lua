@@ -2,6 +2,7 @@
 include("playxlib.lua")
 
 util.AddNetworkString("PlayXProvidersList")
+util.AddNetworkString("PlayXError")
 -- Hardcoding ftw...
 local defaultJWURL = "http://ohmyrocketworks.googlecode.com/svn/trunk/jwplayer/player.swf"
 local defaultHostURL = "http://88.191.109.120:20080/host.html"
@@ -151,7 +152,7 @@ function PlayX.SpawnForPlayer(ply, model, repeater, proximity)
     end
 
     local cls = "gmod_playx" .. (repeater and "_repeater" or proximity and "_proximity" or "")
-    local pos, ang = hook.Call("PlayXSpawnPlayX", GAMEMODE, ply, model, repeater, proximity)
+    local pos, ang = hook.Call("PlayXSpawnPlayX", GAMEMODE, ply, model, repeater)
     local ent
 
     -- No hook?
@@ -168,12 +169,12 @@ function PlayX.SpawnForPlayer(ply, model, repeater, proximity)
 	    
 		local info = PlayXScreens[model:lower()]
 	    
-		if not info or not info.IsProjector or
+		if not info or not info.IsProjector or 
 		   not ((info.Up == 0 and info.Forward == 0) or
 		        (info.Forward == 0 and info.Right == 0) or
 		        (info.Right == 0 and info.Up == 0)) then
 	        ent:SetAngles(Angle(0, (ply:GetPos() - tr.HitPos):Angle().y, 0))
-		    ent:SetPos(tr.HitPos - ent:OBBCenter() +
+		    ent:SetPos(tr.HitPos - ent:OBBCenter() + 
 		       ((ent:OBBMaxs().z - ent:OBBMins().z) + 10) * tr.HitNormal)
 	        ent:DropToFloor()
 	    else
@@ -198,7 +199,7 @@ function PlayX.SpawnForPlayer(ply, model, repeater, proximity)
 	        data.start = tr.HitPos + tr.HitNormal * (ent:OBBMaxs() - ent:OBBMins()):Length()
 	        data.endpos = tr.HitPos + tr.HitNormal * tryDist
 	        data.filter = player.GetAll()
-	        local dist = util.TraceLine(data).Fraction * tryDist -
+	        local dist = util.TraceLine(data).Fraction * tryDist - 
 	            (ent:OBBMaxs() - ent:OBBMins()):Length() / 2
 	        
 	        ent:SetAngles(ang + tr.HitNormal:Angle())
@@ -295,9 +296,9 @@ end
 --- Send the PlayXEnd umsg to clients. You should not have much of a
 -- a reason to call this method.
 function PlayX.SendError(ply, err)
-    umsg.Start("PlayXError", ply)
-	umsg.String(err)
-    umsg.End()
+	net.Start("PlayXError")
+		net.WriteString(err)
+	net.Send(ply)
 end
 
 --- Attempt to detect the PlayX version and put it in PlayX.Version.

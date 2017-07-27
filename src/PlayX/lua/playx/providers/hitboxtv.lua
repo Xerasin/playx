@@ -1,6 +1,6 @@
 local hitbox = {}
 
-function hitbox.Detect(uri)
+function hitbox.Detect(uri)   
     local m = playxlib.FindMatch(uri, {
             "^http[s]?://www%.hitbox%.tv/embed/([%w_-]+)",
             "^http[s]?://www%.hitbox%.tv/([%w_-]+)",

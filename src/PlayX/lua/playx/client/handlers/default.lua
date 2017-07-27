@@ -1,19 +1,19 @@
 -- PlayX
 -- Copyright (c) 2009 sk89q <http://www.sk89q.com>
---
+-- 
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
 -- the Free Software Foundation, either version 2 of the License, or
 -- (at your option) any later version.
---
+-- 
 -- This program is distributed in the hope that it will be useful,
 -- but WITHOUT ANY WARRANTY; without even the implied warranty of
 -- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 -- GNU General Public License for more details.
---
+-- 
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
---
+-- 
 -- $Id$
 
 list.Set("PlayXHandlers", "IFrame", function(width, height, start, volume, adjVol, uri, handlerArgs, callback)
@@ -85,18 +85,18 @@ list.Set("PlayXHandlers", "FlashAPI", function(width, height, start, volume, adj
         local jsStartMul = handlerArgs.JSStartMul and handlerArgs.JSStartMul or 1
 
         if handlerArgs.JSVolumeFunc then
-            code = code .. "player." .. handlerArgs.JSVolumeFunc .. "(" ..
+            code = code .. "player." .. handlerArgs.JSVolumeFunc .. "(" .. 
                 tostring(jsVolMul * volume) .. ");"
 
             volChangeJSF = function(volume)
-                return "try { player." ..
-                    handlerArgs.JSVolumeFunc .. "(" ..
+                return "try { player." .. 
+                    handlerArgs.JSVolumeFunc .. "(" .. 
                     tostring(jsVolMul * volume) .. "); } catch (e) {}"
             end
         end
 
         if handlerArgs.JSStartFunc then
-            code = code .. "player." .. handlerArgs.JSStartFunc .. "(" ..
+            code = code .. "player." .. handlerArgs.JSStartFunc .. "(" .. 
                 tostring(jsStartMul * start) .. ");"
         end
 
@@ -136,17 +136,17 @@ function ]] .. handlerArgs.JSInitFunc .. [[() {
     callback(result)
 end)
 
-list.Set("PlayXHandlers", "SoundCloud", function(width, height, start, volume, adjVol, uri, handlerArgs, callback)
-    if(start > 2) then
-		start = start + 4 -- Lets account for buffer time...
-    end
-	volume = adjVol/100
-    local result = playxlib.GenerateIFrame(width, height, "http://ziondevelopers.github.io/playx/soundcloud.html?url="..playxlib.URLEscape(uri).."&t="..tostring(start*1000).."&vol="..tostring(volume))
+
+list.Set("PlayXHandlers", "YoutubeHTML5", function(width, height, start, volume, adjVol, uri, handlerArgs, callback)
+	local handler = "http://gcinema.net/fastdl/jwplayer/lander.html"
+	volume = adjVol
+	local uri = playxlib.URLEscape(uri)
+	--http://gcinema.net/fastdl/jwplayer/lander.html?url=http://www.youtube.com/watch?v=NbnQhyVqZug&t=60&vol=1
+	
+    local result = playxlib.GenerateIFrame(width, height,string.format(handler.."?url=%s&t=%d&vol=%d", uri, start, volume))
 	result.GetVolumeChangeJS = function(volume)
-		return string.format([[
-			var widget = SC.Widget("player");
-			widget.setVolume(%s)
-        ]], volume/100)
+		return [[
+			jwplayer("player").setVolume(]]..volume..[[)]]
 	end
 	callback(result)
 end)

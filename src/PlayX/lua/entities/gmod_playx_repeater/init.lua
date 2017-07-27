@@ -1,7 +1,28 @@
+-- PlayX
+-- Copyright (c) 2009, 2010 sk89q <http://www.sk89q.com>
+-- 
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 2 of the License, or
+-- (at your option) any later version.
+-- 
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+-- 
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-- 
+-- $Id$
+
+
+include("shared.lua")
+
 AddCSLuaFile("shared.lua")
 AddCSLuaFile("cl_init.lua")
 
-include("shared.lua")
+
 
 --- Initialize the entity.
 -- @hidden
@@ -19,13 +40,6 @@ function ENT:Initialize()
     self:SetUseType(SIMPLE_USE)
 end
 
-function ENT:SpawnFunction(ply, tr)
-    if hook.Call("PlayXSpawnFunction", GAMEMODE, ply, tr) == false then return end
-
-    PlayX.SendSpawnDialog(ply,true,false)
-end
-
-
 --- Set the PlayX entity to be the source. Pass nil or NULL to clear.
 -- @param src Source
 function ENT:SetSource(src)
@@ -33,7 +47,7 @@ function ENT:SetSource(src)
     self.dt.Source = src
 end
 
---- Add a user to the source's subscription list. The user will start
+--- Add a user to the source's subscription list. The user will start 
 -- seeing the media if something is already playing. If the player is already
 -- subscribed, nothing will happen.
 -- @param ply
@@ -87,13 +101,13 @@ end
 function ENT:SpawnFunction(ply, tr)
     if hook.Call("PlayXRepeaterSpawnFunction", GAMEMODE, ply, tr) == false then return end
 
-    PlayX.SendSpawnDialog(ply, true, false)
+    PlayX.SendSpawnDialog(ply, true)
 end
 
 --- When the entity is used.
 -- @hidden
 function ENT:Use(activator, caller)
-    hook.Call("PlayXRepeaterUse", GAMEMODE, self, activator, caller)
+    hook.Call("PlayXRepeaterUse", GAMEMODE, self, activator, caller) 
 end
 
 --- Removal function.

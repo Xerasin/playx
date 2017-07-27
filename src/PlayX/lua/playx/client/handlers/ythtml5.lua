@@ -122,18 +122,46 @@ function playxlib.YTGetVideo(link, onsuccess, onfail)
 
 	http.Fetch(("http://www.youtube.com/get_video_info?&video_id=%s&gt=%f"):format(id, CurTime()), tryDict)
 end
+local function Detect(uri)
+    local m = playxlib.FindMatch(uri, {
+        "^http[s]?://youtube%.com/watch%?.*v=([A-Za-z0-9_%-]+)",
+		"^http[s]?://youtu%.be/([A-Za-z0-9_%-]+)",
+        "^http[s]?://[A-Za-z0-9%.%-]*%.youtube%.com/watch%?.*v=([A-Za-z0-9_%-]+)",
+        "^http[s]?://[A-Za-z0-9%.%-]*%.youtube%.com/v/([A-Za-z0-9_%-]+)",
+        "^http[s]?://youtube%-nocookie%.com/watch%?.*v=([A-Za-z0-9_%-]+)",
+        "^http[s]?://[A-Za-z0-9%.%-]*%.youtube%-nocookie%.com/watch%?.*v=([A-Za-z0-9_%-]+)",
+
+    })
+
+    if m then
+        return m[1]
+    end
+end
 local useHTML = CreateClientConVar( "playx_ytwebm", 1, true, false )
 
 list.Set("PlayXHandlers", "moan", function(width, height, start, volume, adjVol, uri, handlerArgs, callback, thumbnail, paused)
 
 	--if not useHTML:GetBool() then
 		PlayX.Debug("playx_ytwebm is false, using JW.")
-		local url = "http://gcinema.xerasin.com/playvideo.php?vid="..GrabID(uri).."&t="..tostring(math.floor(start)).."&vol="..tostring(volume)
+		local url = "http://gcinema.xerasin.com/playvideo.php?vid="..Detect(uri).."&t="..tostring(math.floor(start)).."&vol="..tostring(volume) .. "&paused=" .. (paused and 1 or 0)
 		print(url)
 		local result = playxlib.GenerateIFrame(width, height, url)
 		result.GetVolumeChangeJS = function(volume)
 			return [[
 				player.setVolume(]]..tostring(volume)..[[);]]
+		end
+		result.PlayPause = function(paused)
+			return paused and [[
+				player.pauseVideo();
+			]] or [[
+				player.playVideo();
+			]]
+		end
+		result.Seek = function(new_value)
+			if not new_value then
+				return [[]]
+			end	
+			return [[player.seekTo(]] .. new_value .. [[);]]
 		end
 		callback(result)
 	--end
@@ -165,7 +193,7 @@ list.Set("PlayXHandlers", "moan", function(width, height, start, volume, adjVol,
 	end, function(s)
 		PlayX.Debug(s)
 		PlayX.Debug("No WebM found, falling back to JW.")
-		local url = "http://gcinema.xerasin.com/playvideo.php?vid="..GrabID(uri).."&t="..tostring(math.floor(start)).."&vol="..tostring(volume)
+		local url = "http://gcinema.xerasin.com/playvideo.php?vid="..Detect(uri).."&t="..tostring(math.floor(start)).."&vol="..tostring(volume)
 		print(url)
 		local result = playxlib.GenerateIFrame(width, height, url)
 		result.GetVolumeChangeJS = function(volume)

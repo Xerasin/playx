@@ -34,7 +34,7 @@ local function ConCmdOpen_Queue(ply, cmd, args)
 	else
 			local uri = args[1]:Trim()
 			
-			local result, err =
+			local result, err = 
 				PlayXQueue.QueueVideo(instance,ply,uri)
 	end
 end
@@ -75,8 +75,9 @@ local function ConCmdOpen(ply, cmd, args)
         else
 			provider = PlayX.ResolveProvider(provider,uri,false)
             if(provider~="SoundCloud") then
-				local result, err = instance:OpenMedia(provider, uri, start, forceLowFramerate, useJW, ply)
-				instance.current_player = NULL
+				local result, err = 
+					instance:OpenMedia(provider, uri, start, forceLowFramerate, useJW)
+
 				if not result then
 					PlayX.SendError(ply, err)
 				else
@@ -85,7 +86,7 @@ local function ConCmdOpen(ply, cmd, args)
 			else
 				local info = {}
 				list.Get("PlayXProviders")["SoundCloud"].QueryMetadata(uri,function(tab)
-					local result, err = instance:OpenMedia(provider,tab["URL"],start,forceLowFramerate,useJW, ply)
+					local result, err = instance:OpenMedia(provider,tab["URL"],start,forceLowFramerate,useJW)
 					
 					if not result then
 						PlayX.SendError(ply, err)

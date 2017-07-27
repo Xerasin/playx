@@ -31,17 +31,11 @@ function SoundCloud.GetPlayer(uri, useJW)
 		},
 	}
 end
-
+SoundCloud.Cache = {}
 function SoundCloud.QueryMetadata(uri, callback, failCallback)
     local url = "http://api.soundcloud.com/resolve.json?url="..uri.."&client_id=cb09cb2fe6132065fc82671cb433b4f5"
-
-    http.Fetch(url,function(content,size)
-		local dec = util.JSONToTable(content)
-		if content == NULL or not dec then
-			if failCallback then failCallback("Failed to get Metadata") end
-			return
-		end
-		if(dec and dec["title"] ~= nil) then
+	local function Do(dec)
+		if(dec["title"] ~= nil) then
 			local title = dec["title"]
 			local desc = dec["description"]
 			local viewerCount = dec["playback_count"]
@@ -55,6 +49,20 @@ function SoundCloud.QueryMetadata(uri, callback, failCallback)
 				["Tags"] = tags,
 				["ViewerCount"] = viewerCount,
 			})
+		end
+	end
+    if SoundCloud.Cache[url] then
+    	Do(SoundCloud.Cache[url])
+    	return
+    end
+    http.Fetch(url,function(content,size)
+		if(content == NULL) then
+			if(failCallback) then failCallback("Failed to get Metadata") end
+		end
+		local dec = util.JSONToTable(content) or {}
+		if(dec["title"] ~= nil) then
+			SoundCloud.Cache[url] = dec
+			Do(dec)
 		end
 	end)
 end

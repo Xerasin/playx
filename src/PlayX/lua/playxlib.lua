@@ -1,3 +1,21 @@
+-- PlayX
+-- Copyright (c) 2009, 2010 sk89q <http://www.sk89q.com>
+-- 
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 2 of the License, or
+-- (at your option) any later version.
+-- 
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+-- 
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-- 
+-- $Id$
+
 playxlib = {}
 
 --- Takes a width and height and returns a boolean to indicate whether the shape
@@ -365,8 +383,7 @@ playxlib.HandlerResult = HandlerResult
 -- Make callable
 local mt = {}
 mt.__call = function(...)
-    local arg = {...}
-    return HandlerResult.new(unpack(arg))
+    return HandlerResult.new(...)
 end
 setmetatable(HandlerResult, mt)
 
@@ -415,7 +432,23 @@ function HandlerResult:AppendJavaScript(js)
 end
 
 function HandlerResult:GetHTML()
-	error"obsolete"
+    return [[
+<!DOCTYPE html>
+<html>
+<head>
+<title>PlayX</title>
+<style type="text/css">
+]] .. self.CSS .. [[
+</style>
+<script type="text/javascript">
+]] .. (self.JS and self.JS or "") .. [[
+</script>
+</head>
+<body>
+]] .. self.Body .. [[
+</body>
+</html>
+]]
 end
 
 --- Generates the HTML for an IFrame.
@@ -425,7 +458,7 @@ end
 -- @return HTML
 -- @hidden
 function playxlib.GenerateIFrame(width, height, url)
-    return playxlib.HandlerResult("", "", "", "", false, url)
+    return playxlib.HandlerResult(nil, nil, nil, nil, false, url)
 end
 
 --- Generates the HTML for an image viewer. The image viewer will automatiaclly
@@ -499,7 +532,6 @@ function playxlib.GenerateFlashPlayer(width, height, url, flashVars, js, forcePl
     local extraParams = ""
     local url = playxlib.HTMLEscape(url)
     local flashVars = flashVars and playxlib.URLEscapeTable(flashVars) or ""
-
     local css = [[
 body {
   margin: 0;
@@ -509,7 +541,7 @@ body {
   overflow: hidden;
 }]]
 
-    if forcePlay then
+    if forcePlay then        
         js = (js and js or "") .. [[
 setInterval(function() {
   try {
@@ -527,7 +559,7 @@ setInterval(function() {
 
     local body = [[
 <div style="width: ]] .. width .. [[px; height: ]] .. height .. [[px; overflow: hidden">
-<object
+<object 
   type="application/x-shockwave-flash"
   src="]] .. url .. [["
   width="]] .. width .. [[" height="]] .. height .. [[" id="player">
@@ -538,12 +570,14 @@ setInterval(function() {
   <param name="allowfullscreen" value="false">
   <param name="FlashVars" value="]] .. flashVars .. [[">
 ]] .. extraParams .. [[
-<div style="background: red; color: white; font: 20pt Arial, sans-serif; padding: 10px">
-    Adobe Flash Player <strong style="text-decoration: underline">for other browsers</strong>
-    is not installed. Please visit http://get.adobe.com/flashplayer/otherversions/
-    and select NPAPI version. Garry's Mod must be restarted after installing.
+<div style="background: red none repeat scroll 0% 0%; color: rgb(255, 255, 255); font: 45pt Calibri; width: 95%; position: relative; top: 30vh; margin: 0px auto; padding: 30px; text-align: center;">
+	<div style="padding-bottom:10px">Adobe Flash Player <strong style="text-decoration: underline">for other browsers</strong> is not installed.<br></div><br />
+	<div style="padding-bottom:10px"><b style="color:black;">></b>Go to <b style="color:red;background-color:white">http://flash.gcinema.net</b><br></div>
+	<div style="padding-bottom:10px"><b style="color:black;">></b>Select your Operating System, then <b style="color:red;background-color:white">FP for Firefox - NPAPI</b><br></div>
+	<div style="padding-bottom:10px"><b style="color:black;">></b><b style="color:red;background-color:white">Install</b>, then <b style="color:red;background-color:white">restart Garry's Mod</b><br></div>
+	<div style="padding-bottom:10px"><b style="color:black;">></b><b style="color:red;background-color:white">Join back this server</b><br></div>
 </div>
-</object>
+</object> 
 </div>
 ]]
 	

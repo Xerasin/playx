@@ -1,6 +1,32 @@
+-- PlayX
+-- Copyright (c) 2009, 2010 sk89q <http://www.sk89q.com>
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 2 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+--
+-- $Id$
+
 local Shoutcast = {}
 
 function Shoutcast.Detect(uri)
+    local m = playxlib.FindMatch(uri, {
+        "^http[s]?://[^:/]+/;stream%.nsv$",
+        "^http[s]?://[^:/]+:[0-9]+/?$",
+    })
+
+    if m then
+        return m[1]
+    end
 end
 
 function Shoutcast.GetPlayer(uri, useJW)
@@ -41,6 +67,14 @@ list.Set("PlayXProvidersList", "Shoutcast", {"Shoutcast"})
 local MP3 = {}
 
 function MP3.Detect(uri)
+    local m = playxlib.FindMatch(uri:gsub("%?.*$", ""), {
+        "^http[s]?://.+%.mp3$",
+        "^http[s]?://.+%.MP3$",
+    })
+
+    if m then
+        return m[1]
+    end
 end
 
 function MP3.GetPlayer(uri, useJW)
@@ -78,7 +112,7 @@ function FlashVideo.Detect(uri)
         "^http[s]?://.+%.AAC$",
     })
 
-    if m then
+    if m and not m[1]:find("media.gcinema.net") then
         return m[1]
     end
 end
@@ -152,7 +186,8 @@ local WebM = {}
 
 function WebM.Detect(uri)
     local m = playxlib.FindMatch(uri:gsub("%?.*$", ""), {
-        "^http[s]?://.+%.[wW][eE][bB][mM]$",
+        "^http[s]?://.+%.webm$",
+        "^http[s]?://.+%.WEBM$",
     })
 
     if m then
@@ -163,7 +198,7 @@ end
 function WebM.GetPlayer(uri, useJW)
     if uri:lower():find("^http[s]?://") then
         return {
-            ["Handler"] = "WebM",
+            ["Handler"] = "NotYoutubeButHTML5", ------REVERT BACK TO WebM IF IT FAILS!!! ALSO, COMMENTED OUT video/mp4 ON JS-LANDER; CHANGE THAT BACK!
             ["URI"] = uri,
             ["ResumeSupported"] = true,
             ["LowFramerate"] = false,
@@ -184,42 +219,29 @@ list.Set("PlayXProviders", "WebM", WebM)
 list.Set("PlayXProvidersList", "WebM", {"WebM"})
 
 
-local WebAudio = {}
+local IFrame = {}
 
-function WebAudio.Detect(uri)
-    local m = playxlib.FindMatch(uri:gsub("%?.*$", ""), {
-		--"^http[s]?://.+%.[aA][aA][Cc]$",
-		--"^http[s]?://.+%.[oO][pP][uU][sS]$",
-		"^http[s]?://.+%.[wW][eE][bB][aA]$",
-		"^http[s]?://.+%.[wW][aA][vV]$",
-		--"^http[s]?://.+%.[mM][pP]3$",
-		--"^http[s]?://.+%.[fF][lL][aA][cC]$",
-    })
-
-    if m then
-        return m[1]
-    end
+function IFrame.Detect(uri)
+  return false
 end
 
-function WebAudio.GetPlayer(uri, useJW)
-    if uri:lower():find("^http[s]?://") then
-        return {
-            ["Handler"] = "WebAudio",
-            ["URI"] = uri,
-            ["ResumeSupported"] = true,
-            ["LowFramerate"] = false,
-            ["QueryMetadata"] = function(callback, failCallback)
-                WebAudio.QueryMetadata(uri, callback, failCallback)
-            end,
-        }
-    end
+function IFrame.GetPlayer(uri, useJW)
+    return {
+        ["Handler"] = "IFrame",
+        ["URI"] = uri,
+        ["ResumeSupported"] = true,
+        ["LowFramerate"] = true,
+        ["QueryMetadata"] = function(callback, failCallback)
+            IFrame.QueryMetadata(uri, callback, failCallback)
+        end,
+    }
 end
 
-function WebAudio.QueryMetadata(uri, callback, failCallback)
+function IFrame.QueryMetadata(uri, callback, failCallback)
     callback({
         ["URL"] = uri,
     })
 end
 
-list.Set("PlayXProviders", "WebAudio", WebAudio)
-list.Set("PlayXProvidersList", "WebAudio", {"WebAudio"})
+list.Set("PlayXProviders", "IFrame", IFrame)
+list.Set("PlayXProvidersList", "IFrame", {"IFrame"})

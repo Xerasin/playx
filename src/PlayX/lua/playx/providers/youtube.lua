@@ -1,9 +1,9 @@
 
-local apiKey = "AIzaSyAOXYJd-KlRB1thyjdifdsD9PCW_GrwsfU"
+local apiKey = "AIzaSyAqzoYxnHtsAOAdNnGv2Zk38uQ1w02UO2o"
 
 local YouTube = {}
 
-function YouTube.Detect(uri)
+function YouTube.Detect(uri)    
     local m = playxlib.FindMatch(uri, {
         "^http[s]?://youtube%.com/watch%?.*v=([A-Za-z0-9_%-]+)",
 		"^http[s]?://youtu%.be/([A-Za-z0-9_%-]+)",
@@ -11,7 +11,7 @@ function YouTube.Detect(uri)
         "^http[s]?://[A-Za-z0-9%.%-]*%.youtube%.com/v/([A-Za-z0-9_%-]+)",
         "^http[s]?://youtube%-nocookie%.com/watch%?.*v=([A-Za-z0-9_%-]+)",
         "^http[s]?://[A-Za-z0-9%.%-]*%.youtube%-nocookie%.com/watch%?.*v=([A-Za-z0-9_%-]+)",
-
+		
     })
 
     if m then
@@ -36,7 +36,7 @@ function YouTube.GetPlayer(uri, useJW)
                 ["autoplay"] = "1",
                 ["start"] = "__start__",
                 ["rel"] = "0",
-                ["hd"] = "0",
+                ["hd"] = "1",
                 ["showsearch"] = "0",
                 ["showinfo"] = "0",
                 ["enablejsapi"] = "1",
@@ -71,7 +71,7 @@ function YouTube.QueryMetadata(uri, callback, failCallback)
 	local url = "https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails&id=".. uri .."&maxResults=1&fields=items(ageGating%2CcontentDetails(duration)%2Csnippet(title%2Cthumbnails%2CchannelTitle%2CchannelId%2Cdescription%2CpublishedAt))&key=" .. apiKey
 	-- I know I dozed the Format thing, but the encoded url has %C parts that mess with the formatter.
 	-- Ah welp, it's sanitized before
-
+	
     http.Fetch(url, function(result, size)
         --[[if size == 0 then
             failCallback("Video not found!")
@@ -84,7 +84,7 @@ function YouTube.QueryMetadata(uri, callback, failCallback)
 		end
 		local title = videoJSON["items"][1]["snippet"]["title"]
 		local desc = videoJSON["items"][1]["snippet"]["description"]
-
+		
 		local submitter = videoJSON["items"][1]["snippet"]["channelTitle"]
 		local submitterUrl = "https://youtube.com/user/" .. videoJSON["items"][1]["snippet"]["channelId"]
 		local publishedDate = nil
@@ -102,7 +102,7 @@ function YouTube.QueryMetadata(uri, callback, failCallback)
 
 		local length = 0
 		if secs then
-			length = length + tonumber(secs)
+			length = length + tonumber(secs)	
 		end
 		if mins then
 			length = length + tonumber(mins)*60
@@ -111,7 +111,7 @@ function YouTube.QueryMetadata(uri, callback, failCallback)
 			length = length + tonumber(hours)*3600
 		end
 		local thumbnail = videoJSON["items"][1]["snippet"]["thumbnails"]["high"] or videoJSON["items"][1]["snippet"]["thumbnails"]["medium"] or videoJSON["items"][1]["snippet"]["thumbnails"]["default"]
-
+		
 		if length then
 			callback({
 				["URL"] = "http://www.youtube.com/watch?v=" .. uri,
@@ -124,6 +124,7 @@ function YouTube.QueryMetadata(uri, callback, failCallback)
 				["Thumbnail"] = thumbnail["url"],
 				--["AllowedIn"] = allows,
 				["RatedEmbeddedDisabled"] = ratedEmbeddedDisabled,
+                ["PlayPauseSupported"] = true,
 			})
 		else
 			callback({
